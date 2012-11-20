@@ -110,8 +110,12 @@ requests parse_urls(const char* url_filename)
 
         pos = strchr(buf, '\n');
         if (pos == NULL) {
-            fprintf(stderr, "%s line %ld: line is too long (> 1MB)\n", url_filename, i);
-            exit(5);
+            if (feof(urls)) {
+                pos = buf + amt;
+            } else {
+                fprintf(stderr, "%s line %ld: line is too long (> 1MB)\n", url_filename, i);
+                exit(5);
+            }
         }
 
         len = pos - buf;
