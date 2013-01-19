@@ -18,10 +18,10 @@ options command_line_options(int argc, char* argv[])
     struct arg_int* concurrency = arg_int0("c", "concurrency", "N", "Number of concurrent requests [1]");
     struct arg_int* run_seconds = arg_int0("s", "run-seconds", "N", "Length of test in seconds [10]");
     struct arg_int* run_requests = arg_int0("r", "run-requests", "N", "Number of requests to make");
+    struct arg_lit* randomize = arg_lit0(NULL, "randomize", "Start each thread at a random position in the URLs file [false]");
     struct arg_int* fail_after = arg_int0("f", "fail-after", "N", "Number of milliseconds after which to consider requests failed");
     struct arg_int* fail_status = arg_int0("t", "fail-status", "N", "HTTP status code greater than which to consider requests failed [400]");
     struct arg_file* url_filename = arg_file0(NULL, NULL, "URL_FILE", "File of URLs to load test");
-    struct arg_lit* randomize = arg_lit0(NULL, "randomize", "Start each thread at a random position in the URLs file [false]");
     struct arg_end* end = arg_end(20);
 
     options opts;
@@ -32,10 +32,10 @@ options command_line_options(int argc, char* argv[])
         concurrency,
         run_seconds,
         run_requests,
+        randomize,
         fail_after,
         fail_status,
         url_filename,
-        randomize,
         end
     };
 
