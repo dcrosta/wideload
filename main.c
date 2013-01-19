@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "cli.h"
 #include "urlfile.h"
@@ -19,6 +20,8 @@ int main(int argc, char* argv[])
 
     options opts = command_line_options(argc, argv);
     requests reqs = parse_urls(opts.url_filename);
+    if (opts.randomize)
+        srand(time(NULL));
 
     pthread_t threads[opts.concurrency];
     threadstate states[opts.concurrency];

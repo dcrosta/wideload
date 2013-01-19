@@ -13,6 +13,7 @@ typedef struct {
     unsigned long  run_requests;
     unsigned long  fail_after;
     unsigned long  fail_status;
+    unsigned char  randomize;
 } options;
 
 /**

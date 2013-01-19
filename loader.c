@@ -83,6 +83,9 @@ void* load_thread(void* st)
     request* reqs = state->reqs;
     options opts = state->opts;
     unsigned long i = 0;
+    unsigned long r = 0;
+    if (opts.randomize)
+        r = rand() % state->req_count;
 
     CURL* handle = setup(opts);
 
@@ -90,7 +93,7 @@ void* load_thread(void* st)
         state->rslts = malloc(sizeof(result) * opts.run_requests);
 
         while (i < opts.run_requests) {
-            make_request(&handle, &state->rslts[i], &reqs[i % state->req_count], opts);
+            make_request(&handle, &state->rslts[i], &reqs[(r + i) % state->req_count], opts);
             i++;
         }
 
@@ -104,7 +107,7 @@ void* load_thread(void* st)
         result* resultcpy;
 
         while (micros() < end_time) {
-            make_request(&handle, &resultbuf[i % 1000], &reqs[i % state->req_count], opts);
+            make_request(&handle, &resultbuf[i % 1000], &reqs[(r + i) % state->req_count], opts);
 
             if (i % 1000 == 999) {
                 // copy the resultbuf and count into a list node,

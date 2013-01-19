@@ -21,6 +21,7 @@ options command_line_options(int argc, char* argv[])
     struct arg_int* fail_after = arg_int0("f", "fail-after", "N", "Number of milliseconds after which to consider requests failed");
     struct arg_int* fail_status = arg_int0("t", "fail-status", "N", "HTTP status code greater than which to consider requests failed [400]");
     struct arg_file* url_filename = arg_file0(NULL, NULL, "URL_FILE", "File of URLs to load test");
+    struct arg_lit* randomize = arg_lit0(NULL, "randomize", "Start each thread at a random position in the URLs file [false]");
     struct arg_end* end = arg_end(20);
 
     options opts;
@@ -34,6 +35,7 @@ options command_line_options(int argc, char* argv[])
         fail_after,
         fail_status,
         url_filename,
+        randomize,
         end
     };
 
@@ -88,6 +90,8 @@ options command_line_options(int argc, char* argv[])
     opts.fail_after = (fail_after->count == 0 ? 0 : fail_after->ival[0]);
     opts.fail_status = (fail_status->count == 0 ? 400 : fail_status->ival[0]);
     opts.url_filename = url_filename->filename[0];
+    opts.randomize = (randomize->count > 0 ? 1 : 0);
+
     arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
     return opts;
