@@ -58,7 +58,7 @@ options command_line_options(int argc, char* argv[])
 
         exit(0);
     } else if (version-> count > 0) {
-        fprintf(stdout, "wideload %s\n", "0.1.0");
+        fprintf(stdout, "wideload %s\n", "0.1.1");
         exit(0);
     }
 
