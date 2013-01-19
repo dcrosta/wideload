@@ -127,8 +127,6 @@ void* load_thread(void* st)
         }
         // account for any left in resultbuf
         state->rslt_count += i % 1000;
-        printf("did %lu requests\n", state->rslt_count);
-
         state->rslts = malloc(sizeof(result) * state->rslt_count);
 
         unsigned long offset = 0;
