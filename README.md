@@ -36,20 +36,28 @@ This will run 50 threads concurrently for 30 seconds each, where each thread
 will request each of the URLs in the file `path/to/urls.txt` as many times
 as it can until the time runs out.
 
-The format of the URLs file is simple:
+The URLs file is a YAML list of URLs and metadata, like:
 
-    GET<tab>http://my.server.com/url1
-    GET<tab>http://my.server.com/url2
-    POST<tab>http://my.server.com/url3<tab>bXkgcG9zdCBkYXRh
+    - get: http://my.server.com/url1
+    - get: http://my.server.com/url2
+    - post: http://my.server.com/url2
+      payload: paramOne=valueOne&paramTwo=valueTwo
+      headers:
+      - Content-Type: application/x-www-form-urlencoded
 
-Each line is 2 or 3 tab-separated values:
+For POST requests with binary payloads (that is, payloads which contain
+characters that would confuse the YAML parser, like newlines), you can use
+the `payload64` key with a base64-encoded value:
 
-1. The HTTP method (currently only GET and POST are supported)
-2. The URL to request
-3. For POST requests, base64-encoded POST body data.
+    - post: http://my.server.com/url2
+      # This is the base64 representation of the same payload as above
+      payload64: cGFyYW1PbmU9dmFsdWVPbmUmcGFyYW1Ud289dmFsdWVUd28=
+      headers:
+      - Content-Type: application/x-www-form-urlencoded
 
-Each line may be at most 1MB, which means that the maximum POST body size is
-just under 1MB (depending on the length of the URL in question).
+Note that the `Content-Type` header is still set to
+`application/x-www-form-urlencoded`, since the (decoded) payload is of that
+content type.
 
 # License
 

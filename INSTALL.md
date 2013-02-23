@@ -3,6 +3,7 @@
 Wideload depends on:
 
 * [libcurl](http://curl.haxx.se/libcurl/)
+* [libyaml](http://pyyaml.org/wiki/LibYAML)
 * [argtable](http://argtable.sourceforge.net)
 
 # Building
