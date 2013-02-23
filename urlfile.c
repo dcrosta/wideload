@@ -1,12 +1,106 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <curl/curl.h>
 #include <yaml.h>
 
 #include "urlfile.h"
 #include "list.h"
 #include "base64decode.h"
 
+/**
+ * Parse a sequence of headers, and set them on the `req`.
+ *
+ * It is assumed that the `parser` has just encountered a
+ * YAML_SCALAR_EVENT whose value was "headers", and has been
+ * advanced beyond the YAML_SEQUENCE_START_EVENT; after this
+ * are expected a series of YAML_SCALAR_EVENT pairs, the
+ * header names and values.
+ *
+ * After return, the `parser` will have consumed the matching
+ * YAML_SEQUENCE_END_EVENT.
+ *
+ * Return 1 on error or 0 on success.
+ */
+int parse_headers(yaml_parser_t* parser, request* req)
+{
+    unsigned long i;
+    char* full_header;
+    yaml_event_t name_event, value_event;
+    list* headers;
+    node* n;
+    header* hdr;
+
+    headers = list_new();
+
+    while (1) {
+        if (!yaml_parser_parse(parser, &name_event))
+            goto parse_headers_error;
+        while (name_event.type == YAML_MAPPING_START_EVENT || name_event.type == YAML_MAPPING_END_EVENT) {
+            yaml_event_delete(&name_event);
+            if (!yaml_parser_parse(parser, &name_event))
+                goto parse_headers_error;
+        }
+        if (name_event.type == YAML_SEQUENCE_END_EVENT)
+            break;
+        if (name_event.type != YAML_SCALAR_EVENT)
+            goto parse_headers_error;
+
+        if (!yaml_parser_parse(parser, &value_event))
+            goto parse_headers_error;
+        if (value_event.type != YAML_SCALAR_EVENT) {
+            fprintf(stderr, "invalid header value for '%s'\n", name_event.data.scalar.value);
+            goto parse_headers_error;
+        }
+
+        if (!(hdr = malloc(sizeof(header))))
+            goto parse_headers_error;
+        if (!(hdr->name = malloc(sizeof(char) * (strlen((const char*)name_event.data.scalar.value) + 1))))
+            goto parse_headers_error;
+        if (!(hdr->value = malloc(sizeof(char) * (strlen((const char*)value_event.data.scalar.value) + 1))))
+            goto parse_headers_error;
+
+        strcpy(hdr->name, (const char*)name_event.data.scalar.value);
+        strcpy(hdr->value, (const char*)value_event.data.scalar.value);
+        n = list_node_new(hdr);
+        list_push(headers, n);
+
+        yaml_event_delete(&name_event);
+        yaml_event_delete(&value_event);
+    }
+
+    if (!(req->headers = malloc(sizeof(header) * headers->length)))
+        goto parse_headers_error;
+
+    req->curl_headers = NULL;
+    n = headers->head;
+    for (i=0; i<headers->length; i++) {
+        hdr = (header *)n->data;
+        req->headers[i].name = hdr->name;
+        req->headers[i].value = hdr->value;
+
+        // also set up header list for libcurl
+        full_header = malloc(sizeof(char) * (strlen(hdr->name) + strlen(hdr->value) + 3));
+        if (!full_header)
+            goto parse_headers_error;
+        sprintf(full_header, "%s: %s", hdr->name, hdr->value);
+        req->curl_headers = curl_slist_append(req->curl_headers, full_header);
+        if (req->curl_headers == NULL)
+            goto parse_headers_error;
+        free(full_header);
+
+        n = n->next;
+    }
+    req->num_headers = headers->length;
+
+    list_free(headers, 0);
+    return 0;
+
+parse_headers_error:
+    // printf("in parse_headers_error\n");
+    list_free(headers, 1);
+    return 1;
+}
 
 /**
  * Parse a (possibly base64 encoded) payload and set it on
@@ -86,6 +180,7 @@ request* parse_request(yaml_parser_t* parser)
 {
     request* req;
     unsigned long expected_ends = 1;
+    unsigned long i;
 
     if (!(req = malloc(sizeof(request))))
         goto parse_request_error;
@@ -93,6 +188,9 @@ request* parse_request(yaml_parser_t* parser)
     req->url = NULL;
     req->payload_length = 0;
     req->payload = NULL;
+    req->headers = NULL;
+    req->num_headers = 0;
+    req->curl_headers = NULL;
 
     yaml_event_t event;
 
@@ -145,6 +243,18 @@ request* parse_request(yaml_parser_t* parser)
                     // printf("  calling parse_payload()\n");
                     if (parse_payload(parser, &event, req))
                         goto parse_request_error;
+                } else if (0 == strncmp("headers", (const char*)event.data.scalar.value, 7)) {
+                    // make sure "headers:" is followed by a sequence
+                    yaml_event_delete(&event);
+                    if (!yaml_parser_parse(parser, &event))
+                        goto parse_request_error;
+                    if (event.type != YAML_SEQUENCE_START_EVENT)
+                        goto parse_request_error;
+
+                    // printf("  calling parse_headers()\n");
+                    if (parse_headers(parser, req)) {
+                        goto parse_request_error;
+                    }
                 } else {
                     fprintf(stderr, "Unknown request metadata '%s'\n", event.data.scalar.value);
                     goto parse_request_error;
@@ -166,6 +276,14 @@ parse_request_error:
             free(req->url);
         if (req->payload != NULL)
             free(req->payload);
+        if (req->headers != NULL) {
+            for (i=0; i<req->num_headers; i++) {
+                free(req->headers[i].name);
+                free(req->headers[i].value);
+            }
+            curl_slist_free_all(req->curl_headers);
+            free(req->headers);
+        }
         free(req);
     }
     return NULL;
@@ -253,6 +371,9 @@ requests parse_urls(const char* url_filename)
         reqs.reqs[i].url = req->url;
         reqs.reqs[i].payload_length = req->payload_length;
         reqs.reqs[i].payload = req->payload;
+        reqs.reqs[i].headers = req->headers;
+        reqs.reqs[i].num_headers = req->num_headers;
+        reqs.reqs[i].curl_headers = req->curl_headers;
         // printf("set request %lu with url %s\n", i, reqs.reqs[i].url);
         n = n->next;
     }

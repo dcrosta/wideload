@@ -9,10 +9,18 @@ typedef enum {
 } http_method;
 
 typedef struct {
+    char* name;
+    char* value;
+} header;
+
+typedef struct {
     http_method   method;
     char*         url;
-    unsigned long payload_length;
     char*         payload;
+    unsigned long payload_length;
+    header*       headers;
+    unsigned long num_headers;
+    struct curl_slist* curl_headers;
 } request;
 
 typedef struct {

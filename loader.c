@@ -51,6 +51,12 @@ void make_request(CURL** handle, result* rslt, request* req, options opts)
         curl_easy_setopt(*handle, CURLOPT_HTTPGET, 0);
     }
 
+    if (req->num_headers > 0) {
+        curl_easy_setopt(*handle, CURLOPT_HTTPHEADER, req->curl_headers);
+    } else {
+        curl_easy_setopt(*handle, CURLOPT_HTTPHEADER, NULL);
+    }
+
     rslt->time_first_byte = 0;
     rslt->num_bytes = 0;
     rslt->status = 0;
