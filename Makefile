@@ -1,5 +1,5 @@
 CFLAGS=$(shell curl-config --cflags) -Wall -Werror $(EXTRA_CFLAGS)
-LFLAGS=$(shell curl-config --libs) -largtable2 -lpthread
+LFLAGS=$(shell curl-config --libs) -largtable2 -lpthread -lyaml
 CC=gcc
 AR=ar
 ARFLAGS=-r
