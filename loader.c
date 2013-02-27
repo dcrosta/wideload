@@ -6,6 +6,7 @@
 
 #include <curl/curl.h>
 
+#include "main.h"
 #include "loader.h"
 #include "list.h"
 
@@ -23,7 +24,7 @@ CURL* setup(options opts)
     curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 1);
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, on_response);
     curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, on_header);
-    curl_easy_setopt(handle, CURLOPT_USERAGENT, "wideload 0.1.0");
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "wideload " VERSION " (libcurl " LIBCURL_VERSION ")");
 
     if (opts.fail_after != 0)
         curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, opts.fail_after);
