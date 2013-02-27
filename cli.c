@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <argtable2.h>
 
+#include "main.h"
 #include "cli.h"
 
 #define NOT_POSITIVE_INT(x) ((x)->count > 0 && (x)->ival[0] < 1)
@@ -58,7 +59,7 @@ options command_line_options(int argc, char* argv[])
 
         exit(0);
     } else if (version-> count > 0) {
-        fprintf(stdout, "wideload %s\n", "0.2.0");
+        fprintf(stdout, "wideload %s\n", VERSION);
         exit(0);
     }
 
