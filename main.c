@@ -17,6 +17,9 @@ int cmp_ul_asc(const void* aa, const void* bb)
 int main(int argc, char* argv[])
 {
     unsigned long i, j, k;
+    unsigned long failures = 0;
+    unsigned long total = 0;
+    FILE* csv;
 
     options opts = command_line_options(argc, argv);
     requests reqs = parse_urls(opts.url_filename);
@@ -43,11 +46,9 @@ int main(int argc, char* argv[])
     }
 
     // compute summary statistics
-    FILE* csv = fopen("detailed-results.csv", "w");
+    csv = fopen("detailed-results.csv", "w");
     fprintf(csv, "method,url,time_start,time_first_byte,time_finish,status,bytes_received\n");
 
-    unsigned long failures = 0;
-    unsigned long total = 0;
     for (i=0; i<opts.concurrency; i++) {
         threadstate state = states[i];
         for (j=0; j<state.rslt_count; j++) {
