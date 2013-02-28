@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
         qsort(timings, total, sizeof(unsigned long), cmp_ul_asc);
 
-        printf("Request time (ms)\n");
+        printf("Successful request time (ms)\n");
         printf(" 50%%: %lu\n", (unsigned long)(timings[total / 2] / 1000.0));
         printf(" 75%%: %lu\n", (unsigned long)(timings[(unsigned long)(total * 0.75)] / 1000.0));
         printf(" 95%%: %lu\n", (unsigned long)(timings[(unsigned long)(total * 0.95)] / 1000.0));
