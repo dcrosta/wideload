@@ -17,6 +17,7 @@ int cmp_ul_asc(const void* aa, const void* bb)
 int main(int argc, char* argv[])
 {
     unsigned long i, j, k;
+    unsigned long* timings;
     unsigned long failures = 0;
     unsigned long total = 0;
     FILE* csv;
@@ -68,29 +69,31 @@ int main(int argc, char* argv[])
         }
     }
 
-    unsigned long timings[total];
-
-    k = 0;
-    for (i=0; i<opts.concurrency; i++) {
-        threadstate state = states[i];
-        for (j=0; j<state.rslt_count; j++) {
-            if (state.rslts[j].status >= opts.fail_status)
-                continue;
-            timings[k] = state.rslts[j].time_end - state.rslts[j].time_start;
-            k++;
+    if (NULL != (timings = malloc(sizeof(unsigned long) * total))) {
+        k = 0;
+        for (i=0; i<opts.concurrency; i++) {
+            threadstate state = states[i];
+            for (j=0; j<state.rslt_count; j++) {
+                if (state.rslts[j].status >= opts.fail_status)
+                    continue;
+                timings[k] = state.rslts[j].time_end - state.rslts[j].time_start;
+                k++;
+            }
         }
+
+        qsort(timings, total, sizeof(unsigned long), cmp_ul_asc);
+
+        printf("Request time (ms)\n");
+        printf(" 50%%: %lu\n", (unsigned long)(timings[total / 2] / 1000.0));
+        printf(" 75%%: %lu\n", (unsigned long)(timings[(unsigned long)(total * 0.75)] / 1000.0));
+        printf(" 95%%: %lu\n", (unsigned long)(timings[(unsigned long)(total * 0.95)] / 1000.0));
+        printf(" max: %lu\n", (unsigned long)(timings[total - 1] / 1000.0));
+        printf("\n");
+
+        printf("Failures: %lu\n", failures);
+
+        free(timings);
     }
-
-    qsort(timings, total, sizeof(unsigned long), cmp_ul_asc);
-
-    printf("Request time (ms)\n");
-    printf(" 50%%: %lu\n", (unsigned long)(timings[total / 2] / 1000.0));
-    printf(" 75%%: %lu\n", (unsigned long)(timings[(unsigned long)(total * 0.75)] / 1000.0));
-    printf(" 95%%: %lu\n", (unsigned long)(timings[(unsigned long)(total * 0.95)] / 1000.0));
-    printf(" max: %lu\n", (unsigned long)(timings[total - 1] / 1000.0));
-    printf("\n");
-
-    printf("Failures: %lu\n", failures);
 
     for (i=0; i<opts.concurrency; i++) {
         threadstate state = states[i];
