@@ -16,7 +16,7 @@ int cmp_ul_asc(const void* aa, const void* bb)
 
 int main(int argc, char* argv[])
 {
-    int i, j, k;
+    unsigned long i, j, k;
 
     options opts = command_line_options(argc, argv);
     requests reqs = parse_urls(opts.url_filename);
