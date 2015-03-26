@@ -10,7 +10,7 @@
 #include "loader.h"
 #include "list.h"
 
-inline unsigned long micros()
+static inline unsigned long micros()
 {
     struct timeval now;
     gettimeofday(&now, NULL);
