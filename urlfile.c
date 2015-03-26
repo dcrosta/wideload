@@ -116,7 +116,7 @@ parse_headers_error:
 int parse_payload(yaml_parser_t* parser, yaml_event_t* event, request* req)
 {
     char* payload;
-    unsigned long rawlength;
+    size_t rawlength;
     yaml_event_t payload_event;
     if (!yaml_parser_parse(parser, &payload_event))
         return 1;
@@ -128,7 +128,7 @@ int parse_payload(yaml_parser_t* parser, yaml_event_t* event, request* req)
     if (0 == strncmp("payload64", (const char*)event->data.scalar.value, 9)) {
         unsigned long payload_length;
 
-        if (rawlength < 0 || rawlength % 4 != 0) {
+        if (rawlength % 4 != 0) {
             fprintf(stderr, "base64-encoded POST payload length must be a positive multiple of 4 (was %lu)", rawlength);
             yaml_event_delete(&payload_event);
             return 1;
