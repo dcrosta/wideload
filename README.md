@@ -59,6 +59,15 @@ Note that the `Content-Type` header is still set to
 `application/x-www-form-urlencoded`, since the (decoded) payload is of that
 content type.
 
+# Building on Mac OS X
+
+Install dependencies first:
+
+    brew install libyaml
+    brew install curl
+    brew install argtable
+    make
+
 # License
 
 Wideload is issued under the BSD license (see attached LICENSE file). It
